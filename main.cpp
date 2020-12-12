@@ -1,15 +1,20 @@
-#include<chessboard.h>
-#include<QCoreApplication>
+#include<ia.h>
+#include<QApplication>
 
 int main(int argc, char *argv[])
 {
-    //QCoreApplication a(argc, argv);
+    QApplication a(argc, argv);
 
     ChessBoard chessBoard;
+
     if(chessBoard.initChessBoard()){
-        uint depth = 1;
+        std::cout <<"Hello worlds" << std::endl;
+        uint depth = 7;
+        chessBoard.toString();
+        //IA ia(&chessBoard, depth);
+        //ia.playAGame(10);
         chessBoard.moveGenTest(depth);
     }
-    return 0;
+    return a.exec();
 }
 

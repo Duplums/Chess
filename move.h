@@ -5,6 +5,7 @@
 #include <sstream>
 #include <regex>
 #include "bitboard.h"
+#include "engineerror.h"
 
 /* Déclaration des variables globales */
 
@@ -17,12 +18,8 @@ extern const Flag LEFT_CASTLE_FLAG;
 extern const Flag CAPTURE_FLAG[6];
 extern const Flag PROMOTION_FLAG[6][4];
 
-extern const Piece promotedPiece[4];
-extern const Piece capturedPiece[6];
-// Double push pawn
-extern const char doublePushPawn[2];
-extern const char normalizedDoublePushSq;
 
+// 1 move = 40 bits = 5o.
 class Move
 {
 public:
@@ -31,6 +28,8 @@ public:
     Move(const Move& m); // constructor by copy
     void setMove(const Move* m);
     void setMove(Square from, Square to, const Flag &flag);
+    void setCastlingRights(CRights exCastlingRights);
+    CRights getCastlingRights() const;
     void clean();
     bool enPassant();
     bool rightCastle();
@@ -39,9 +38,11 @@ public:
     bool doublePush();
     bool capture();
     bool wasPieceNeverUsed();
+    bool promoCapturedPiece();
     void pieceWasNeverUsed(bool b);
-    Square getSquareEPCapturedPiece();
-    void addToFlag(const Flag &f);
+    bool isDoublePushSq();
+    void setDoublePushSq(const Square& BBSq);
+    Square getDoublePushSq();
     void pieceWasEnPassant(bool b);
     Square getEnPassantSq();
     Piece getPromotedPiece();
@@ -53,7 +54,8 @@ public:
     std::string toString(bool allInfos = true);
 
 private:
-    MoveE m_flag;    
+    MoveE m_flag;
+    CRights m_exCastlingRights;
 
     // Useful for generating a flag for a move
     /* 1 move = 32 bits, 1 flag = 20 bits
@@ -77,13 +79,19 @@ private:
     static const Flag leftCastleMask = 0x400000;
     static const Flag doublePushSquareMask = 0x3e000000;
     static const Flag pieceUseMask = 0x40000000;
-    //static const Flag piecePotentiallyEpCaptured = 0x80000000;
     static const Flag doublePushMask = 0x1000000;
     static const Flag fromMask = 0x3f;
     static const Flag toMask = 0xfc0;
+    static const Piece promotedPiece[4];
+    static const Piece capturedPiece[6];
+    static const Square doublePushSq[17];
+
+    // Double push pawn
+    static const char normalizedDoublePushSq = -24;
 
 };
 
 bool operator==(Move const& m1, Move const& m2);
+bool operator!=(Move const& m1, Move const& m2);
 
 #endif // MOVE_H

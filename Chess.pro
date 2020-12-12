@@ -6,7 +6,7 @@
 QT += core gui
 QT += widgets
 
-CONFIG += c++11
+CONFIG += c++17
 
 TARGET = Chess
 CONFIG += console
@@ -27,8 +27,8 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 
 SOURCES += \
-        main.cpp \
-        mainwindow.cpp \
+    main.cpp \
+    mainwindow.cpp \
     chessboard.cpp \
     move.cpp \
     noeudc.cpp \
@@ -38,10 +38,12 @@ SOURCES += \
     transpositiontable.cpp \
     pv.cpp \
     iaerror.cpp \
-    movesgenerator.cpp
+    movesgenerator.cpp \
+    zobristhash.cpp \
+    ttentry.cpp
 
-HEADERS += \
-        mainwindow.h \
+HEADERS +=\
+    mainwindow.h \
     chessboard.h \
     move.h \
     noeudc.h \
@@ -51,4 +53,6 @@ HEADERS += \
     transpositiontable.h \
     pv.h \
     iaerror.h \
-    movesgenerator.h
+    movesgenerator.h \
+    zobristhash.h \
+    ttentry.h

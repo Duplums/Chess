@@ -1,7 +1,21 @@
 #include "noeudc.h"
 
-NoeudC::NoeudC(Square sq, Piece piece): m_sq(sq), m_piece(piece), m_movesBB(0), m_pinnedMovesBB(indicatrice[true])
+NoeudC::NoeudC(Square sq, Piece piece, Color c): m_sq(sq), m_piece(piece), m_movesBB(0), m_pinnedMovesBB(indicatrice[true]), m_color(c)
 {}
+NoeudC::NoeudC(const NoeudC &nodeToCopy){
+    this->m_sq = nodeToCopy.getSquare();
+    this->m_piece = nodeToCopy.getPiece();
+    this->m_color = nodeToCopy.getColor();
+    this->m_movesBB = nodeToCopy.getMovesBB();
+    this->m_pinnedMovesBB = nodeToCopy.getPinnedMoves();
+    this->m_neverUsed = nodeToCopy.isNeverUsed();
+}
+void NoeudC::setColor(Color c){
+    m_color = c;
+}
+Color NoeudC::getColor() const{
+    return m_color;
+}
 void NoeudC::addMove(Square sq){
     m_movesBB |= (one << sq);
 }
@@ -11,17 +25,20 @@ void NoeudC::addMove(const BB m){
 void NoeudC::setPinnedMove(const BB & m){
     m_pinnedMovesBB = m;
 }
+BB NoeudC::getPinnedMoves() const{
+    return m_pinnedMovesBB;
+}
 void NoeudC::andMove(BB &bb){
     m_movesBB = bb & m_pinnedMovesBB;
     bb = m_movesBB;
 }
-BB* NoeudC::getMovesBB(){
-    return &m_movesBB;
+BB NoeudC::getMovesBB() const{
+    return m_movesBB;
 }
 bool NoeudC::hasNonEmptyMove(){
     return m_movesBB > 0;
 }
-Piece NoeudC::getPiece(){
+Piece NoeudC::getPiece() const{
     return m_piece;
 }
 void NoeudC::setPiece(const Piece &piece){
@@ -30,10 +47,10 @@ void NoeudC::setPiece(const Piece &piece){
 void NoeudC::setNeverUsed(bool b){
     m_neverUsed = b;
 }
-bool NoeudC::isNeverUsed(){
+bool NoeudC::isNeverUsed() const{
     return m_neverUsed;
 }
-Square NoeudC::getSquare(){
+Square NoeudC::getSquare() const{
     return m_sq;
 }
 void NoeudC::setSquare(const Square &sq){

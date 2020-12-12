@@ -8,6 +8,7 @@ const int EngineError::MOVE_EP_EMPTY = 4;
 const int EngineError::CHESSBOARD_UNCONSISTANT = 5;
 const int EngineError::MOVE_EMPTY_CAPTURE = 6;
 const int EngineError::MOVE_GEN_INDEX_ERROR = 7;
+const int EngineError::MOVE_GEN_OBJ_ERROR = 8;
 
 EngineError::EngineError(const int &num, const std::string &description)  throw (): error_nb(num), description(description){
 }

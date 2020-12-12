@@ -30,18 +30,18 @@ const Flag PROMOTION_FLAG[6][4] = {
     {41, 43, 45, 47}, // queen captured
 }; // 1st: promoted piece, 2nd: captured piece
 
-const Piece promotedPiece[4] = {rook, knight, bishop, queen};
-const Piece capturedPiece[6] = {empty, pawn, rook, knight, bishop, queen};
-// Double push pawn
-const char doublePushPawn[2] = {16, -16};
-const char normalizedDoublePushSq = -24;
+const Piece Move::promotedPiece[4] = {rook, knight, bishop, queen};
+const Piece Move::capturedPiece[6] = {empty, pawn, rook, knight, bishop, queen};
+const Square Move::doublePushSq[17] = {outside, a5, b5, c5, d5, e5, f5, g5, h5, // black double push sq
+                                       a4, b4, c4, d4, e4, f4, g4, h4};// white double push sq
 
 Move::Move(Square from, Square to, const Flag& flag)
 {
     m_flag = from | (to << 6) | (flag << 12);
+    m_exCastlingRights = 0;
 }
 
-Move::Move(const Move &m): m_flag(m.getFlag())
+Move::Move(const Move &m): m_flag(m.getFlag()), m_exCastlingRights(m.getCastlingRights())
 {}
 
 Move::Move(): m_flag(0)
@@ -71,6 +71,9 @@ bool Move::rightCastle(){
 bool Move::promotion(){
     return (m_flag & promotionMask) > 0;
 }
+bool Move::promoCapturedPiece(){
+    return (m_flag & capturedPromoMask) > 0;
+}
 bool Move::enPassant(){
     return (m_flag & enPassantMask) > 0;
 }
@@ -80,17 +83,26 @@ Square Move::getEnPassantSq(){
 void Move::pieceWasNeverUsed(bool b){
     m_flag = (m_flag & ~(one << 30)) | (b << 30);
 }
-void Move::addToFlag(const Flag &f){
-    m_flag |= (f << 12);
+void Move::setCastlingRights(CRights exCastlingRights){
+    m_exCastlingRights = exCastlingRights;
+}
+void Move::setDoublePushSq(const Square& sq){
+    if(sq != outside){
+        int doublePushSqNormalized = sq + normalizedDoublePushSq;
+        if(doublePushSqNormalized < 0 || doublePushSqNormalized > 15)
+            throw EngineError(EngineError::CHESSBOARD_UNCONSISTANT, toString());
+
+        m_flag |= (DOUBLE_PUSH_SQUARE_FLAG[doublePushSqNormalized] << 12);
+    }
 }
 bool Move::wasPieceNeverUsed(){
     return (m_flag & pieceUseMask) > 0;
 }
-Square Move::getSquareEPCapturedPiece(){
-    if((m_flag & doublePushSquareMask) > 0){
-        return (Square) (((m_flag & doublePushSquareMask) >> 25) + 23);
-    }
-    return outside;
+bool Move::isDoublePushSq(){
+    return (m_flag & doublePushSquareMask) > 0;
+}
+Square Move::getDoublePushSq(){
+    return doublePushSq[((m_flag & doublePushSquareMask) >> 25)];
 }
 Piece Move::getPromotedPiece(){
     return promotedPiece[(m_flag & promotedMask) >> 13];
@@ -110,9 +122,15 @@ Square Move::getTo(){
 MoveE Move::getFlag() const{
     return m_flag;
 }
-
+CRights Move::getCastlingRights() const{
+    return m_exCastlingRights;
+}
 bool operator==(Move const& m1, Move const& m2){
     return m1.getFlag() == m2.getFlag();
+}
+
+bool operator!=(Move const& m1, Move const& m2){
+    return m1.getFlag() != m2.getFlag();
 }
 
 std::string Move::toString(bool allInfos){
@@ -120,11 +138,13 @@ std::string Move::toString(bool allInfos){
     if(allInfos)
         result    << "Move from " << BitBoard::toString(getFrom()) << "[" << (int)getFrom() << "]"
                   << " to " << BitBoard::toString(getTo())  << "[" << (int)getTo() << "]"
-                  << " with captured " << capture()
+                  << " with captured " << capture() << "\n"
                   << " RC " << rightCastle() << " LC " << leftCastle()
                   << " promotion " << promotion() << " EP " << enPassant()
                   << " double push " << doublePush()
-                  << " ex double push sq " << BitBoard::toString(getSquareEPCapturedPiece()) << std::endl;
+                  << " ex double push sq " << BitBoard::toString(BitBoard::getIndexLeastSignBit(getDoublePushSq()))
+                  << " castle rights " << BitBoard::toString(m_exCastlingRights)
+                  << std::endl;
     else
         result << BitBoard::toString(getFrom()) << BitBoard::toString(getTo());
     return result.str();

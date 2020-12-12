@@ -9,7 +9,10 @@ const BB petitRoque[2] = {one << 5 | one << 6, one << 61 | one << 62};
 const BB grandRoque[2] = {one << 1 | one << 2 | one << 3, one << 57 | one << 58 | one << 59};
 const Square rightRookByColor[2] = {h8, h1};
 const Square leftRookByColor[2] = {a8, a1};
+const Square kingInitSqByColor[2] = {e8, e1};
 const BB pawnPromotionRaw[2] = {0xff00000000000000, 0xff};
+const BB firstFileMask(0x0101010101010101);
+const BB diagMask(0x8040201008040201);
 BB rayAttacks[8][64];
 BB pawnAttacks[2][64];
 BB pawnMove[2][64];
@@ -28,6 +31,8 @@ unsigned char byteFillingOccupancy[256][8];
 BB fillCopyOfLastRow[256];
 BB fillCopyOfLastFile[256];
 BB inBetweenArray[64][64];
+BB BBSquare[65];
+CRights castlingRights[64][64];
 
 const char lookUpLeastSignBit[68] = {
      64,  0,  1, 39,  2, 15, 40, 23,
@@ -85,6 +90,36 @@ void BitBoard::flipAntiDiag(){
     m_bb ^=       t ^ (t >> 18) ;
     t  = k1 & (m_bb ^ (m_bb <<  9));
     m_bb ^=       t ^ (t >>  9) ;
+}
+
+void BitBoard::initBBSquare(){
+    for(char i = 0; i < 64; ++i){
+        BBSquare[i] = (one << i);
+    }
+    BBSquare[outside] = 0;
+}
+// (1) = right castle for white
+// (2) = left castle for white
+// (3) = right castle for black
+// (4) = left castle for black
+void BitBoard::initCastlingRights(){
+    for(uchar from = 0; from < 64; ++from){
+        for(uchar to = 0; to < 64; ++to){
+            castlingRights[from][to] = 15;         // <-> (1111)_2
+            if(from == rightRookByColor[white] || to == rightRookByColor[white])
+                castlingRights[from][to] &= 14;    // <-> (1110)_2
+            if(from == leftRookByColor[white] || to == leftRookByColor[white])
+                castlingRights[from][to] &= 13;    // <-> (1101)_2
+            if(from == rightRookByColor[black] || to == rightRookByColor[black])
+                castlingRights[from][to] &= 11;    // <-> (1011)_2
+            if(from == leftRookByColor[black] || to == leftRookByColor[black])
+                castlingRights[from][to] &= 7;     // <-> (0111)_2
+            if(from == kingInitSqByColor[black] || to == kingInitSqByColor[black])
+                castlingRights[from][to] &= 3;     // <-> (0011)_2
+            if(from == kingInitSqByColor[white] || to == kingInitSqByColor[white])
+                castlingRights[from][to] &= 12;    // <-> (1100)_2
+        }
+    }
 }
 
 void BitBoard::initPawnAttacks(){
@@ -366,6 +401,8 @@ void BitBoard::initVAttacks(){
 }
 
 void BitBoard::init(){
+    initCastlingRights();
+    initBBSquare();
     initRayAttacks();
     initPawnAttacks();
     initPawnMove();
@@ -434,6 +471,15 @@ void BitBoard::fileClosestBitsFromSq(BB& fileMask, BB& bb, Square sq){
    const BB mask(0x8040201008040201);
    bb = ((bb >> (sq & 7)) * mask) >> 56;
    bb = fillCopyOfLastFile[byteOccupancy[bb & 255][7-sq/8]] & fileMask;
+}
+
+std::string BitBoard::toString(const CRights cR){
+    std::string result("");
+    if(cR&1) result += "RC w ";
+    if(cR&2) result += "LC w ";
+    if(cR&4) result += "RC b ";
+    if(cR&8) result += "LC b";
+    return result;
 }
 
 std::string BitBoard::toString(const Square sq){

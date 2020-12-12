@@ -9,21 +9,25 @@
 #define CLOUAGE_DIAG 3
 #define CLOUAGE_ADIAG 4
 
-extern const BB one;
+// The color is not used by the engine, only for the ZKey and the display.
 
 class NoeudC
 {
 public:
-    NoeudC(Square sq, Piece piece = empty);
+    NoeudC(Square sq, Piece piece = empty, Color c = white);
+    NoeudC(NoeudC const& nodeToCopy);
     static Move* getMoveFromAlgNot(std::string &m, bool white_is_playing, NoeudC* chessB[]);
-    Square getSquare();
+    Color getColor() const;
+    void setColor(Color c);
+    Square getSquare() const;
     void setSquare(const Square& sq);
     void setPiece(const Piece& piece);
+    BB getPinnedMoves() const;
     void setMove(const BB&);
-    BB* getMovesBB();
+    BB getMovesBB() const;
     bool hasNonEmptyMove();
-    Piece getPiece();
-    bool isNeverUsed();
+    Piece getPiece() const;
+    bool isNeverUsed() const;
     void setNeverUsed(bool b);
     void addMove(Square);
     void setPinnedMove(const BB&);
@@ -36,7 +40,7 @@ public:
 private:
     Square m_sq;
     Piece m_piece;
-
+    Color m_color;
     BB m_movesBB;
     BB m_pinnedMovesBB;
     bool m_neverUsed = true;

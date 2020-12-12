@@ -17,6 +17,7 @@ public:
     static const int CHESSBOARD_UNCONSISTANT;
     static const int MOVE_EMPTY_CAPTURE;
     static const int MOVE_GEN_INDEX_ERROR;
+    static const int MOVE_GEN_OBJ_ERROR;
 
 private:
     int error_nb;

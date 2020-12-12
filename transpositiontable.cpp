@@ -2,5 +2,5 @@
 
 TranspositionTable::TranspositionTable()
 {
-
 }
+

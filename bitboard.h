@@ -43,9 +43,10 @@ typedef enum Piece : char{
 } Piece;
 
 typedef uint64_t BB;
+typedef uint64_t ZKey;
 typedef uint32_t Flag;
 typedef uint32_t MoveE;
-
+typedef uint8_t CRights; // in fact, 4 bits are enough.
 
 /* Déclaration des variables globales */
 
@@ -73,6 +74,9 @@ extern uchar byteFillingOccupancy[256][8]; //2ko
 extern BB fillCopyOfLastRow[256];  //2ko
 extern BB fillCopyOfLastFile[256]; //2ko
 extern BB inBetweenArray[64][64]; //32 ko... (INITIALIZED AFTER RAYATTACKS)
+extern BB BBSquare[65];
+extern const BB firstFileMask;
+extern const BB diagMask;
 
 extern const BB indicatrice[2];
 // Castling
@@ -80,7 +84,10 @@ extern const BB petitRoque[2];
 extern const BB grandRoque[2];
 extern const Square rightRookByColor[2];
 extern const Square leftRookByColor[2];
-
+extern const Square kingInitSqByColor[2];
+extern CRights castlingRights[64][64]; // When a move is played, this array is used to update
+                                       // the castling rights by checking the 'from' and 'to'
+                                       // of the move.
 // Promotion
 extern const BB pawnPromotionRaw[2];
 extern const char lookUpLeastSignBit[68];
@@ -89,31 +96,28 @@ class BitBoard
 {
 public:
     static Square getIndexLeastSignBit(const BB &bb);
-    void flipVertical();
-    void flipHorizontal();
-    void flipDiag();
-    void flipAntiDiag();
+    static void initCastlingRights();
+    static void initRayAttacks();
+    static void initPawnAttacks();
+    static void initBBSquare();
+    static void initPawnMove();
+    static void initPawnPartialMove();
+    static void initKnightAttacks();
+    static void initBishopAttacks();
+    static void initRookAttacks();
+    static void initDiagAttacks();
+    static void initAntiDiagAttacks();
+    static void initVAttacks();
+    static void initHAttacks();
+    static void initHAdjacent();
+    static void initKingAttacks();
+    static void initByteOccupancy();
+    static void initByteFillingOccupancy();
+    static void initInBetweenArray();
+    static void initFillCopyOfLastRow();
+    static void initFillCopyOfLastFile();
 
-    void initRayAttacks();
-    void initPawnAttacks();
-    void initPawnMove();
-    void initPawnPartialMove();
-    void initKnightAttacks();
-    void initBishopAttacks();
-    void initRookAttacks();
-    void initDiagAttacks();
-    void initAntiDiagAttacks();
-    void initVAttacks();
-    void initHAttacks();
-    void initHAdjacent();
-    void initKingAttacks();
-    void initByteOccupancy();
-    void initByteFillingOccupancy();
-    void initInBetweenArray();
-    void initFillCopyOfLastRow();
-    void initFillCopyOfLastFile();
-
-    void init();
+    static void init();
 
     /* Etant donné sq et un bb, donne les bits les plus proches
      * de notre sq selon le type de ligne*/
@@ -123,13 +127,16 @@ public:
     static void rankClosestBitsFromSq(BB& bb, Square sq);
     static void fileClosestBitsFromSq(BB &fileMask, BB& bb, Square sq);
 
+    void flipVertical();
+    void flipHorizontal();
+    void flipDiag();
+    void flipAntiDiag();
+
     static std::string toString(const BB bb);
     static std::string toString(const Square sq);
+    static std::string toString(const CRights cR);
 private:
     BB m_bb;
 };
-
-
-
 
 #endif // BITBOARD_H
